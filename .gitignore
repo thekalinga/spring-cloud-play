@@ -14,6 +14,5 @@ out/
 **/*.ipl
 *.iwl
 **/*.iwl
-/logs
+logs/
 *.log
-config.properties
