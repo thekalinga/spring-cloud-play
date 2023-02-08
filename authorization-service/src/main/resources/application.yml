@@ -1,0 +1,11 @@
+server:
+  port: 9000
+logging:
+  group:
+    oauth: org.springframework.security.oauth2
+    rest-template: org.springframework.web.client,org.springframework.http.client,org.apache.hc.client5
+    app: com.example
+  level:
+    oauth: trace
+    rest-template: trace
+    app: debug
