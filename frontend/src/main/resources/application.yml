@@ -1,0 +1,28 @@
+spring:
+  security:
+    oauth2:
+      client:
+        provider:
+          spring-oauth-service:
+            issuerUri: http://auth.localtest.me:9000
+        registration:
+          frontend-client:
+            provider: spring-oauth-service
+            clientId: frontend-client
+            clientSecret: frontend-client-secret
+            scope:
+              - openid
+              - profile
+              - resource.read
+              - resource.write
+
+logging:
+  group:
+    oauth: org.springframework.security.oauth2
+    rest-template: org.springframework.web.client,org.springframework.http.client,org.apache.hc.client5.http
+    app: com.example
+  level:
+    oauth: trace
+    rest-template: trace
+    security: info
+    app: debug
