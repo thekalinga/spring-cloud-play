@@ -26,6 +26,7 @@ import org.springframework.security.oauth2.server.authorization.config.annotatio
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
+import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
@@ -34,6 +35,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.time.Duration;
 import java.util.UUID;
 
 @Log4j2
@@ -82,24 +84,14 @@ public class SecurityConfig {
         .roles("USER")
         .build();
 
-    return new InMemoryUserDetailsManager(userDetails);
+    UserDetails user2Details = User.builder()
+        .username("u2")
+        .password("{noop}p")
+        .roles("USER")
+        .build();
+
+    return new InMemoryUserDetailsManager(userDetails, user2Details);
   }
-
-//  @Bean
-//  public PasswordEncoder passwordEncoder() {
-//    return PasswordEncoderFactories.createDelegatingPasswordEncoder();
-//  }
-
-//  @Bean
-//  public UserDetailsService userDetailsService(PasswordEncoder encoder) {
-//    UserDetails userDetails = User.builder()
-//        .username("u")
-//        .password(encoder.encode("p"))
-//        .roles("USER")
-//        .build();
-//
-//    return new InMemoryUserDetailsManager(userDetails);
-//  }
 
   @Bean
   public RegisteredClientRepository registeredClientRepository() {
@@ -116,6 +108,7 @@ public class SecurityConfig {
         .scope("resource.read")
         .scope("resource.write")
         .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
+        .tokenSettings(TokenSettings.builder().accessTokenTimeToLive(Duration.ofSeconds(20)).refreshTokenTimeToLive(Duration.ofMinutes(1)).reuseRefreshTokens(false).build())
         .build();
 
     RegisteredClient backendClientCredentialsClient = RegisteredClient.withId(UUID.randomUUID().toString())
@@ -126,6 +119,7 @@ public class SecurityConfig {
         .scope(OidcScopes.OPENID)
         .scope(OidcScopes.PROFILE)
         .scope("resource.client_credentials_only")
+//        .tokenSettings(TokenSettings.builder().accessTokenTimeToLive(Duration.ofSeconds(30)).refreshTokenTimeToLive(Duration.ofMinutes(2)).build())
         .build();
 
     return new InMemoryRegisteredClientRepository(frontendAuthorizationCodeClient, backendClientCredentialsClient);

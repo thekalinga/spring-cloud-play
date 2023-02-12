@@ -4,8 +4,9 @@ import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
-import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -18,24 +19,34 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @Component
 public class AccessTokenRelayingInterceptor implements ClientHttpRequestInterceptor {
-  private final OAuth2AuthorizedClientRepository oAuth2AuthorizedClientRepository;
+  private final OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
+  private final TokenRetrieverCumRefresher tokenRetrieverCumRefresher;
 
-  public AccessTokenRelayingInterceptor(OAuth2AuthorizedClientRepository oAuth2AuthorizedClientRepository) {
-    this.oAuth2AuthorizedClientRepository = oAuth2AuthorizedClientRepository;
+  public AccessTokenRelayingInterceptor(OAuth2AuthorizedClientService oAuth2AuthorizedClientService,
+      TokenRetrieverCumRefresher tokenRetrieverCumRefresher) {
+    this.oAuth2AuthorizedClientService = oAuth2AuthorizedClientService;
+    this.tokenRetrieverCumRefresher = tokenRetrieverCumRefresher;
   }
 
   @Override
   public ClientHttpResponse intercept(HttpRequest request, byte[] body,
       ClientHttpRequestExecution execution) throws IOException {
-    final var accessToken = getAuthorisedClient().getAccessToken().getTokenValue();
-    request.getHeaders().add(AUTHORIZATION, "Bearer " + accessToken);
+    final var authorisedClient = getAuthorisedClient();
+    OAuth2AuthorizeRequest authorizeRequest = OAuth2AuthorizeRequest.withClientRegistrationId(authorisedClient.getClientRegistration().getRegistrationId())
+        .principal(getAuthentication())
+        .build();
+
+    final var authorizedClient = tokenRetrieverCumRefresher.retrieveToken(authorizeRequest);
+    final var accessTokenValue = authorizedClient.getAccessToken().getTokenValue();
+    request.getHeaders().add(AUTHORIZATION, "Bearer " + accessTokenValue);
+
     return execution.execute(request, body);
   }
 
   private OAuth2AuthorizedClient getAuthorisedClient() {
-    final var requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
     final var oAuth2AuthenticationToken = getAuthentication();
     final var clientId = oAuth2AuthenticationToken.getAuthorizedClientRegistrationId();
-    return oAuth2AuthorizedClientRepository.loadAuthorizedClient(clientId, oAuth2AuthenticationToken, requireNonNull(requestAttributes).getRequest());
+//    final var requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+    return oAuth2AuthorizedClientService.loadAuthorizedClient(clientId, oAuth2AuthenticationToken.getName());
   }
 }

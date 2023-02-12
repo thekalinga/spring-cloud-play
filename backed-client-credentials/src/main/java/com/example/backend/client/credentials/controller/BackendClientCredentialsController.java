@@ -29,9 +29,7 @@ public class BackendClientCredentialsController {
     var headers = new HttpHeaders();
     headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + requireNonNull(authorizedClient).getAccessToken().getTokenValue());
     HttpEntity<String> requestEntity = new HttpEntity<>(headers);
-    final var responseEntity =
-        restTemplate.exchange("http://backend-resource-server.localtest.me:8081/client_credentials_only", GET,
-            requestEntity, String.class);
+    final var responseEntity = restTemplate.exchange("http://backend-resource-server.localtest.me:8081/client_credentials_only", GET, requestEntity, String.class);
     return responseEntity.getBody();
   }
 
