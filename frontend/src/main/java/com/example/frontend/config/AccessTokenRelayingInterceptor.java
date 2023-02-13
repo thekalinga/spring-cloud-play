@@ -8,8 +8,6 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.io.IOException;
 
@@ -20,12 +18,12 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 @Component
 public class AccessTokenRelayingInterceptor implements ClientHttpRequestInterceptor {
   private final OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
-  private final TokenRetrieverCumRefresher tokenRetrieverCumRefresher;
+  private final OAuthTokenRefresher oauthTokenRefresher;
 
   public AccessTokenRelayingInterceptor(OAuth2AuthorizedClientService oAuth2AuthorizedClientService,
-      TokenRetrieverCumRefresher tokenRetrieverCumRefresher) {
+      OAuthTokenRefresher oauthTokenRefresher) {
     this.oAuth2AuthorizedClientService = oAuth2AuthorizedClientService;
-    this.tokenRetrieverCumRefresher = tokenRetrieverCumRefresher;
+    this.oauthTokenRefresher = oauthTokenRefresher;
   }
 
   @Override
@@ -36,7 +34,7 @@ public class AccessTokenRelayingInterceptor implements ClientHttpRequestIntercep
         .principal(getAuthentication())
         .build();
 
-    final var authorizedClient = tokenRetrieverCumRefresher.retrieveToken(authorizeRequest);
+    final var authorizedClient = oauthTokenRefresher.retrieveToken(authorizeRequest);
     final var accessTokenValue = authorizedClient.getAccessToken().getTokenValue();
     request.getHeaders().add(AUTHORIZATION, "Bearer " + accessTokenValue);
 

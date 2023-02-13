@@ -21,12 +21,12 @@ import java.time.Instant;
 import static org.springframework.security.oauth2.core.OAuth2ErrorCodes.INVALID_TOKEN;
 
 @Component
-public class TokenRetrieverCumRefresher {
+public class OAuthTokenRefresher {
 
   private final OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
   private final AuthorizedClientServiceOAuth2AuthorizedClientManager authorizedClientManager;
 
-  public TokenRetrieverCumRefresher(OAuth2AuthorizedClientService oAuth2AuthorizedClientService,
+  public OAuthTokenRefresher(OAuth2AuthorizedClientService oAuth2AuthorizedClientService,
       ClientRegistrationRepository clientRegistrationRepository) {
     this.oAuth2AuthorizedClientService = oAuth2AuthorizedClientService;
     final var authorizedClientManager = new AuthorizedClientServiceOAuth2AuthorizedClientManager(clientRegistrationRepository, oAuth2AuthorizedClientService);
