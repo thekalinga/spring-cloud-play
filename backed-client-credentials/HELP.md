@@ -1,4 +1,13 @@
-# Access token
+# Help
+
+Start `com.example.backend.client.credentials.BackendClientCredentialsApplication`
+
+# Additional notes
+
+* `http` command here is is `httpie` utility
+* `jq` json query utility
+
+## Access token
 
 ```
 http --verbose \
@@ -7,7 +16,7 @@ http --verbose \
 grant_type=client_credentials
 ```
 
-# Raw access token value
+## Raw access token value
 
 ```
 http --print b \
@@ -16,7 +25,7 @@ http --print b \
 grant_type=client_credentials | jq --raw-output '.access_token'
 ```
 
-# Access backend with bearer token
+## Access backend with bearer token
 
 ```
 BEARER_TOKEN=$(

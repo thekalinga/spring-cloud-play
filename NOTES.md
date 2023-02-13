@@ -15,3 +15,6 @@ For Form Login
 For web requests, AuthenticationSuccessHandler -> SavedRequestAwareAuthenticationSuccessHandler
     as this stores the original request that resulted in the login to happen in the 1st place
 
+
+
+http -v frontend.localtest.me:8080/oauth2/authorize
