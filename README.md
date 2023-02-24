@@ -24,7 +24,7 @@ Since all our services will run on the same machine (`localhost`), use `*.localt
 
 - [ ] Add support for token reuse incase of client credentials flow (use caching)
 - [ ] Integrate all above flows with
-    - [ ] Spring cloud loadbalancer
+    - [*] Spring cloud loadbalancer
     - [ ] Spring cloud circuitbreaker + bulkhead
     - [ ] Spring declarative client integration (@HttpExchange & its fnds)
     - [ ] Integrate service discovery with k8s DNS service (core-dns)

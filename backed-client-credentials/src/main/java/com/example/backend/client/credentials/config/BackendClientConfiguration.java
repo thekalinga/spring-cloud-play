@@ -30,6 +30,5 @@ public class BackendClientConfiguration {
   @Bean
   OAuth2AccessTokenResponseClient<OAuth2ClientCredentialsGrantRequest> oAuth2AccessTokenResponseClient() {
     return new DefaultClientCredentialsTokenResponseClient();
-
   }
 }

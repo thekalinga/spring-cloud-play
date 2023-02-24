@@ -26,3 +26,4 @@ logging:
     rest-template: trace
     security: info
     app: debug
+
