@@ -1,0 +1,30 @@
+spring:
+  security:
+    oauth2:
+      client:
+        provider:
+          spring-oauth-service:
+            issuerUri: http://auth.localtest.me:9000
+        registration:
+          standalone-client:
+            provider: spring-oauth-service
+            clientId: standalone-client
+            clientSecret: standalone-client-secret
+            authorizationGrantType: client_credentials
+            scope:
+              - openid
+              - profile
+              - resource.standalone_client
+      resourceserver:
+        jwt:
+          issuer-uri: http://auth.localtest.me:9000
+
+logging:
+  group:
+    web-client: org.springframework.web.reactive.function.client,reactor.netty.http.client
+    security: org.springframework.security, org.springframework.security.oauth2
+    app: com.example
+  level:
+    web-client: trace
+    security: debug
+    app: debug

@@ -1,0 +1,18 @@
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://auth.localtest.me:9000
+
+server:
+  port: 55555
+logging:
+  group:
+    web-client: org.springframework.web.reactive.function.client,reactor.netty.http.client
+    security: org.springframework.security, org.springframework.security.oauth2
+    app: com.example
+  level:
+    web-client: trace
+    security: debug
+    app: debug

@@ -1,0 +1,42 @@
+spring:
+  # oauth2 security config
+  security:
+    oauth2:
+      client:
+        provider:
+          spring-oauth-service:
+            issuerUri: http://auth.localtest.me:9000
+        registration:
+          frontend-client:
+            provider: spring-oauth-service
+            clientId: frontend-client
+            clientSecret: frontend-client-secret
+            scope:
+              - openid
+              - profile
+              - email
+              - resource.read
+              - resource.write
+              - resource.token_relay
+  # tracing exchange filter function request & responses
+  codec:
+    log-request-details: true
+  cloud:
+    # load balancer config
+    loadbalancer:
+      clients:
+        resource-service:
+          retry:
+            enabled: false
+          healthCheck:
+            initialDelay: P999D # to test load balancing, lets delay initial health check to 99days i.e never going to happen during testing phase
+
+logging:
+  group:
+    web-client: org.springframework.web.reactive.function.client,reactor.netty.http.client
+    security: org.springframework.security, org.springframework.security.oauth2
+    app: com.example
+  level:
+    web-client: trace
+    security: debug
+    app: debug

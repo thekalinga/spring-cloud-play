@@ -1,0 +1,114 @@
+package com.example.frontend.config;
+
+import org.springframework.security.oauth2.client.AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientProvider;
+import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientProviderBuilder;
+import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2AuthorizationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebSession;
+import reactor.core.publisher.Mono;
+
+import java.time.Clock;
+import java.time.Instant;
+
+import static com.example.frontend.Util.getAuthentication;
+import static org.springframework.security.oauth2.core.OAuth2ErrorCodes.INVALID_TOKEN;
+import static org.springframework.web.filter.reactive.ServerWebExchangeContextFilter.EXCHANGE_CONTEXT_ATTRIBUTE;
+
+@Component
+public class OAuthTokenRefresher {
+
+  private final ReactiveOAuth2AuthorizedClientService oAuth2AuthorizedClientService;
+  private final AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager authorizedClientManager;
+
+  public OAuthTokenRefresher(ReactiveOAuth2AuthorizedClientService oAuth2AuthorizedClientService,
+      ReactiveClientRegistrationRepository clientRegistrationRepository) {
+    this.oAuth2AuthorizedClientService = oAuth2AuthorizedClientService;
+    final var authorizedClientManager = new AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager(clientRegistrationRepository, oAuth2AuthorizedClientService);
+//    var accessTokenResponseClient = new DefaultClientCredentialsTokenResponseClient();
+    ReactiveOAuth2AuthorizedClientProvider authorizedClientProvider = ReactiveOAuth2AuthorizedClientProviderBuilder
+        .builder()
+        .refreshToken()
+//        .clientCredentials(configurer -> configurer.accessTokenResponseClient(accessTokenResponseClient))
+        .build();
+    authorizedClientManager.setAuthorizedClientProvider(authorizedClientProvider);
+    this.authorizedClientManager = authorizedClientManager;
+  }
+
+  public Mono<String> retrieveToken() {
+    return getAuthorizedClient()
+        .flatMap(currentOAuth2AuthorizedClient -> {
+          final var accessToken = currentOAuth2AuthorizedClient.getAccessToken();
+
+          // if token is not expired, just return it
+          if (accessToken.getExpiresAt() == null || accessToken.getExpiresAt().isAfter(Instant.now(Clock.systemUTC()))) {
+            return Mono.just(currentOAuth2AuthorizedClient.getAccessToken().getTokenValue());
+          }
+
+          // 1. If token is expired & refresh token exists to renew token
+          //   a. Trigger token renewal flow
+          //      i. If fails due to refresh token being invalid, trigger login flow (see point 2)
+          //   b. Persist updated set of tokens (i.e updated AuthorisedClient) in the underlying storage
+          // 2. If not, trigger auth flow by sending OAuth2AuthenticationException down the pipe (which is handled by `ExceptionTranslationWebFilter`)
+          return getAuthentication()
+              .flatMap(authentication -> {
+                final var clientRegistrationId = currentOAuth2AuthorizedClient.getClientRegistration().getRegistrationId();
+                final var principalName = authentication.getPrincipal().getName();
+
+                // 1
+                final var refreshToken = currentOAuth2AuthorizedClient.getRefreshToken();
+                if (refreshToken != null && refreshToken.getExpiresAt() != null && refreshToken.getExpiresAt().isBefore(Instant.now(Clock.systemUTC()))) {
+                  return clearContextAndLaunchAuthFlow(clientRegistrationId, principalName); // 2
+                }
+
+                OAuth2AuthorizeRequest authorizeRequest = OAuth2AuthorizeRequest.withClientRegistrationId(clientRegistrationId)
+                    .principal(authentication)
+                    .build();
+                return authorizedClientManager.authorize(authorizeRequest) // 1.a
+                    .flatMap(updatedOAuth2AuthorisedClient -> {
+                      return oAuth2AuthorizedClientService.saveAuthorizedClient(updatedOAuth2AuthorisedClient, authorizeRequest.getPrincipal()) // 1.b
+                          .thenReturn(updatedOAuth2AuthorisedClient);
+                    })
+                    .map(updatedOAuth2AuthorisedClient -> updatedOAuth2AuthorisedClient.getAccessToken().getTokenValue())
+                    .onErrorResume(OAuth2AuthorizationException.class, e -> clearContextAndLaunchAuthFlow(clientRegistrationId, principalName)); // 1.a.i
+              });
+        });
+  }
+
+  private Mono<OAuth2AuthorizedClient> getAuthorizedClient() {
+    return getAuthentication()
+        .flatMap(oAuth2AuthenticationToken ->  {
+          final var clientId = oAuth2AuthenticationToken.getAuthorizedClientRegistrationId();
+          return oAuth2AuthorizedClientService.loadAuthorizedClient(clientId, oAuth2AuthenticationToken.getName())
+              .switchIfEmpty(clearSessionAndLaunchAuthFlow()); // if the authorised client doesnt exist, lets clear session & trigger login flow
+        });
+  }
+
+  private <T> Mono<T> clearContextAndLaunchAuthFlow(String clientRegistrationId, String principalName) {
+    // lets remove authorized client for current user, clear session & trigger automatic oauth login flow
+    return oAuth2AuthorizedClientService.removeAuthorizedClient(clientRegistrationId, principalName)
+        .then(clearSessionAndLaunchAuthFlow());
+  }
+
+  private <T> Mono<T> clearSessionAndLaunchAuthFlow() {
+    return Mono.deferContextual(contextView -> {
+          final ServerWebExchange exchange = contextView.getOrDefault(EXCHANGE_CONTEXT_ATTRIBUTE, null);
+          if (exchange != null) {
+            return Mono.just(exchange)
+                .flatMap(ServerWebExchange::getSession)
+                .flatMap(WebSession::invalidate); // invalidate session
+          } else {
+            return Mono.empty();
+          }
+        })
+        .then(Mono.error(new OAuth2AuthenticationException(new OAuth2Error(INVALID_TOKEN), "Session expired, please login"))); // trigger oauth flow automatically if empty
+  }
+
+}
