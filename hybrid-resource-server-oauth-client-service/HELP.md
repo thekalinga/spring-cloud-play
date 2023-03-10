@@ -1,6 +1,7 @@
 # Help
 
-Start `com.example.hybrid.HybridApplication`
+1. Start `com.example.hybrid.HybridApplication`
+2. Server starts on `44444` port. Access it [here](http://hybrid-resource-server-oauth-client-service-server.localtest.me:44444)
 
 # Additional notes
 
@@ -12,7 +13,7 @@ Start `com.example.hybrid.HybridApplication`
 ```
 http --verbose \
 --auth backend-client-credentials-client:backend-client-credentials-client-secret \
---form auth.localtest.me:9000/oauth2/token \
+--form authorization-service.localtest.me:9000/oauth2/token \
 grant_type=client_credentials
 ```
 
@@ -21,7 +22,7 @@ grant_type=client_credentials
 ```
 http --print b \
 --auth backend-client-credentials-client:backend-client-credentials-client-secret \
---form auth.localtest.me:9000/oauth2/token \
+--form authorization-service.localtest.me:9000/oauth2/token \
 grant_type=client_credentials | jq --raw-output '.access_token'
 ```
 
@@ -31,7 +32,7 @@ grant_type=client_credentials | jq --raw-output '.access_token'
 BEARER_TOKEN=$(
     http --print b \
         --auth backend-client-credentials-client:backend-client-credentials-client-secret \
-        --form auth.localtest.me:9000/oauth2/token \
+        --form authorization-service.localtest.me:9000/oauth2/token \
         grant_type=client_credentials \
         | jq --raw-output '.access_token'
 )

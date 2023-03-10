@@ -12,7 +12,7 @@ Start `com.example.standalone.StandaloneClientApplication`
 ```
 http --verbose \
 --auth standalone-client:standalone-client-secret \
---form auth.localtest.me:9000/oauth2/token \
+--form authorization-service.localtest.me:9000/oauth2/token \
 grant_type=client_credentials
 ```
 
@@ -21,7 +21,7 @@ grant_type=client_credentials
 ```
 http --print b \
 --auth standalone-client:standalone-client-secret \
---form auth.localtest.me:9000/oauth2/token \
+--form authorization-service.localtest.me:9000/oauth2/token \
 grant_type=client_credentials | jq --raw-output '.access_token'
 ```
 
@@ -31,7 +31,7 @@ grant_type=client_credentials | jq --raw-output '.access_token'
 BEARER_TOKEN=$(
     http --print b \
         --auth standalone-client:standalone-client-secret \
-        --form auth.localtest.me:9000/oauth2/token \
+        --form authorization-service.localtest.me:9000/oauth2/token \
         grant_type=client_credentials \
         | jq --raw-output '.access_token'
 )

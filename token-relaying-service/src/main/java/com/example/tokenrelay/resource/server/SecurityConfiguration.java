@@ -1,4 +1,4 @@
-package com.example.backend.proxy.resource.server;
+package com.example.tokenrelay.resource.server;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -4,11 +4,11 @@
 
 `OAuth2AuthorizationServerMetadataEndpointFilter`
 
-`http auth.localtest.me:9000/.well-known/oauth-authorization-server &> logs/oauth-authorization-server-metadata.json`
+`http authorization-service.localtest.me:9000/.well-known/oauth-authorization-server &> logs/oauth-authorization-server-metadata.json`
 
 `OidcProviderConfigurationEndpointFilter`
 
-http auth.localtest.me:9000/.well-known/openid-configuration &> logs/openid-configuration-metadata.json
+http authorization-service.localtest.me:9000/.well-known/openid-configuration &> logs/openid-configuration-metadata.json
 
 # Access token
 
@@ -25,7 +25,7 @@ Get the json for the key with kid (not all keys) & paste it in `public key` area
 Access userinfo endpoint on auth server using above token
 
 ```
-http -v http://auth.localtest.me:9000/userinfo \
+http -v http://authorization-service.localtest.me:9000/userinfo \
     Accept:application/json \
     Authorization:"Bearer "
 ```

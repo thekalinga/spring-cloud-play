@@ -1,4 +1,4 @@
-package com.example.backend.proxy.resource.server;
+package com.example.tokenrelay.resource.server;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,16 +11,16 @@ import static org.springframework.http.HttpMethod.GET;
 
 @RestController
 @RequestMapping("/")
-public class ProxyingResourceSeverController {
+public class TokenRelayingResourceServerController {
 
   private final WebClient proxyWebClient;
 
-  public ProxyingResourceSeverController(WebClient proxyWebClient) {
+  public TokenRelayingResourceServerController(WebClient proxyWebClient) {
     this.proxyWebClient = proxyWebClient;
   }
 
   @GetMapping
-  @PreAuthorize("hasAuthority('SCOPE_token_relay')")
+  @PreAuthorize("hasAuthority('SCOPE_resource.token_relay')")
   public Mono<String> read() {
     return proxyWebClient.method(GET)
         .uri("http://resource-service.localtest.me:55555/read")

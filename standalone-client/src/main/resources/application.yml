@@ -4,7 +4,7 @@ spring:
       client:
         provider:
           spring-oauth-service:
-            issuerUri: http://auth.localtest.me:9000
+            issuerUri: http://authorization-service.localtest.me:9000
         registration:
           standalone-client:
             provider: spring-oauth-service
@@ -15,9 +15,6 @@ spring:
               - openid
               - profile
               - resource.standalone_client
-      resourceserver:
-        jwt:
-          issuer-uri: http://auth.localtest.me:9000
 
 logging:
   group:

@@ -79,7 +79,7 @@ public class LoadbalancerConfiguration {
 
         @Override
         public Flux<List<ServiceInstance>> get() {
-          final var instance1 = new DefaultServiceInstance("instance1", RESOURCE_SERVICE_ID, "client-credentials.localtest.me", 44444, false);
+          final var instance1 = new DefaultServiceInstance("instance1", HYBRID_SERVICE_ID, "hybrid-resource-server-oauth-client-service.localtest.me", 44444, false);
           List<ServiceInstance> instances = List.of(instance1);
           return Flux.just(instances);
         }
@@ -99,7 +99,7 @@ public class LoadbalancerConfiguration {
 
         @Override
         public Flux<List<ServiceInstance>> get() {
-          final var instance1 = new DefaultServiceInstance("instance1", TOKEN_RELAYING_SERVICE_ID, "proxying-resource-server.localtest.me", 33333, false);
+          final var instance1 = new DefaultServiceInstance("instance1", TOKEN_RELAYING_SERVICE_ID, "token-relaying-service.localtest.me", 33333, false);
           List<ServiceInstance> instances = List.of(instance1);
           return Flux.just(instances);
         }

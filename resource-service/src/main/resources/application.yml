@@ -3,7 +3,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://auth.localtest.me:9000
+          issuer-uri: http://authorization-service.localtest.me:9000
 
 server:
   port: 55555
